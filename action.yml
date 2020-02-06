@@ -1,0 +1,28 @@
+name: 'Alibaba Cloud Container Registry (ACR) Login'
+description: 'Log in to a container registry'
+inputs: 
+  username:
+    description: 'Container registry username'
+    required: false
+    default: ''
+  password:
+    description: 'Container registry password'
+    required: false
+    default: ''
+  accessKeyId:
+    description: 'Access key id'
+    required: false
+    default: ''
+  accessKeySecret:
+    description: 'Access key secret'
+    required: false
+    default: ''
+  login-server:
+    description: 'Container registry server url'
+    required: true
+    default: 'https://index.docker.io/v1/'
+branding:
+  color: 'green'
+runs:
+  using: 'node12'
+  main: 'lib/login.js'

@@ -1,0 +1,25 @@
+{
+    "name": "acr-login-action",
+    "version": "0.0.0",
+    "private": true,
+    "main": "lib/login.js",
+    "scripts": {
+        "build": "tsc --outDir ./lib/ --rootDir ./src/"
+    },
+    "keywords": [
+        "actions",
+        "node",
+        "setup"
+    ],
+    "author": "GitHub",
+    "license": "Apache",
+    "dependencies": {
+        "@actions/core": "^1.0.0",
+        "@actions/exec": "^1.0.0",
+        "@actions/tool-cache": "^1.0.0",
+        "@alicloud/pop-core": "^1.7.9"
+    },
+    "devDependencies": {
+        "@types/node": "^12.0.4"
+    }
+}
