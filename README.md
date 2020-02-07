@@ -35,15 +35,18 @@ Refer to the action metadata file for details about all the inputs: [action.yml]
 
 ## You can build and push container registry by using the following example
 ```yaml
-- uses: denverdino/acr-login@v1
+- name: Login to ACR
+  uses: denverdino/acr-login@v1
   with:
-    login-server: https://cr.cn-hangzhou.aliyuncs.com
-    username: ${{ secrets.REGISTRY_USERNAME }}
-    password: ${{ secrets.REGISTRY_PASSWORD }}
-
-- run: |
-    docker build . -t registry.cn-hangzhou.aliyuncs.com/denverdino/demo:${{ github.sha }}
-    docker push registry.cn-hangzhou.aliyuncs.com/denverdino/demo:${{ github.sha }}
+    login-server: https://registry.cn-hangzhou.aliyuncs.com
+    username: "${{ secrets.REGISTRY_USERNAME }}"
+    password: "${{ secrets.REGISTRY_PASSWORD }}"
+- name: Build and push image
+  env:
+    IMAGE_TAG: ${{ github.sha }}
+  run: |
+    docker build -t registry.cn-hangzhou.aliyuncs.com/denverdino/demo:$IMAGE_TAG .
+    docker push registry.cn-hangzhou.aliyuncs.com/denverdino/demo:$IMAGE_TAG
 ```
 
 ### Prerequisite
