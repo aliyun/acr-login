@@ -9,11 +9,11 @@ inputs:
     description: 'Container registry password'
     required: false
     default: ''
-  accessKeyId:
+  access-key-id:
     description: 'Access key id'
     required: false
     default: ''
-  accessKeySecret:
+  access-key-secret:
     description: 'Access key secret'
     required: false
     default: ''
@@ -25,4 +25,4 @@ branding:
   color: 'green'
 runs:
   using: 'node12'
-  main: 'lib/login.js'
+  main: 'src/login.js'
