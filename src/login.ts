@@ -13,8 +13,8 @@ async function run() {
     let password = core.getInput('password', { required: false });
     let loginServer = core.getInput('login-server', { required: true });
 
-    if (accessKeyId.length >0) {
-        // Set temp user id/pwd by tokens
+    if (accessKeyId.length > 0) {
+        console.log('Getting tokens for temp user by access key');
 
         var client = new ROAClient({
             accessKeyId,
@@ -28,6 +28,8 @@ async function run() {
             let result = response as any
             username = result.data.tempUserName
             password = result.data.tempUserName
+            console.log(`temp username=${username}`);
+            console.log(`temp password=${password}`);
         } catch (err) {
             core.setFailed(`Action failed to get with error ${err}`);
         }
