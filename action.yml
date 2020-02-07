@@ -17,10 +17,18 @@ inputs:
     description: 'Access key secret'
     required: false
     default: ''
+  region-id:
+    description: 'Region id'
+    required: false
+    default: 'cn-hangzhou'
+  instance-id:
+    description: 'Registry instance id'
+    required: false
+    default: ''
   login-server:
     description: 'Container registry server url'
     required: true
-    default: 'https://index.docker.io/v1/'
+    default: ''
 branding:
   color: 'green'
 runs:
