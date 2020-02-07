@@ -1,10 +1,10 @@
-import * as core from '@actions/core';
-import * as io from '@actions/io';
-import { issueCommand } from '@actions/core/lib/command';
-import * as path from 'path';
-import * as fs from 'fs';
-import ROAClient from '@alicloud/pop-core';
+const core = require('@actions/core');
+const io = require('@actions/io');
+const { issueCommand } = require('@actions/core/lib/command');
 
+const path = require('path');
+const fs = require('fs');
+const { ROAClient } = require('@alicloud/pop-core');
 
 async function run() {
     let accessKeyId = core.getInput('access-key-id', { required: false });
@@ -25,7 +25,7 @@ async function run() {
 
         try {
             let response = await client.request('GET', '/tokens')
-            let result = response as any
+            let result = response;
             username = result.data.tempUserName
             password = result.data.tempUserName
             console.log(`temp username=${username}`);

@@ -25,4 +25,4 @@ branding:
   color: 'green'
 runs:
   using: 'node12'
-  main: 'lib/login.js'
+  main: 'src/login.js'
