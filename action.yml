@@ -31,7 +31,7 @@ inputs:
     default: ''
 branding:
   color: 'green'
-  icon: 'blue'
+  icon: 'anchor'
 runs:
   using: 'node12'
   main: 'src/login.js'
