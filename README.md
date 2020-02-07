@@ -14,7 +14,7 @@ Or
 ```yaml
 - uses: denverdino/acr-login@v1
   with:
-    login-server: '<login server>' # example: https://cr.cn-hangzhou.aliyuncs.com
+    login-server: '<login server>' # example: https://registry.cn-hangzhou.aliyuncs.com
     accessKeyId: '<accessKeyId>'
     accessKeySecret: '<accessKeySecret>'
 ```
@@ -30,8 +30,8 @@ Refer to the action metadata file for details about all the inputs: [action.yml]
     password: ${{ secrets.REGISTRY_PASSWORD }}
 
 - run: |
-    docker build . -t registry.cn-hangzhou.aliyuncs.com/demo:${{ github.sha }}
-    docker push registry.cn-hangzhou.aliyuncs.com/demo:${{ github.sha }}
+    docker build . -t registry.cn-hangzhou.aliyuncs.com/denverdino/demo:${{ github.sha }}
+    docker push registry.cn-hangzhou.aliyuncs.com/denverdino/demo:${{ github.sha }}
 ```
 
 ### Prerequisite

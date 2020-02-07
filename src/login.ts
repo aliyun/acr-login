@@ -7,8 +7,8 @@ import ROAClient from '@alicloud/pop-core';
 
 
 async function run() {
-    let accessKeyId = core.getInput('accessKeyId', { required: false });
-    let accessKeySecret = core.getInput('accessKeySecret', { required: false });
+    let accessKeyId = core.getInput('access-key-id', { required: false });
+    let accessKeySecret = core.getInput('access-key-secret', { required: false });
     let username = core.getInput('username', { required: false });
     let password = core.getInput('password', { required: false });
     let loginServer = core.getInput('login-server', { required: true });
