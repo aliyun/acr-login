@@ -1,9 +1,10 @@
 {
     "name": "acr-login-action",
-    "version": "0.0.0",
+    "version": "0.1.1",
     "private": true,
     "main": "lib/login.js",
     "scripts": {
+        "lint": "eslint ."
     },
     "keywords": [
         "actions",
@@ -14,11 +15,10 @@
     "license": "Apache",
     "dependencies": {
         "@actions/core": "^1.2.6",
-        "@actions/exec": "^1.0.0",
-        "@actions/tool-cache": "^1.0.0",
-        "@alicloud/pop-core": "^1.7.9"
+        "@actions/io": "^1.0.2",
+        "@alicloud/pop-core": "^1.7.10"
     },
     "devDependencies": {
-        "@types/node": "^12.0.4"
+        "eslint": "^7.4.0"
     }
 }

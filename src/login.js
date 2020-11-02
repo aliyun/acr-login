@@ -24,13 +24,13 @@ async function run() {
     let regionId = core.getInput('region-id', { required: false });
     let instanceId = core.getInput('instance-id', { required: false });
     let loginServer = core.getInput('login-server', { required: false });
+    let endpoint = getAPIEndpoint(regionId);
 
     if (accessKeyId.length > 0) {
         if (regionId.length == 0) {
             core.setFailed(`Action failed for region-id is missing`);
+            return;
         }
-        
-        endpoint = getAPIEndpoint(regionId);
 
         if (instanceId.length == 0) {
 
@@ -39,7 +39,7 @@ async function run() {
             }
 
             console.log('Getting tokens for temp user by access key ...');
-            var client = new ROAClient({
+            let client = new ROAClient({
                 accessKeyId,
                 accessKeySecret,
                 endpoint: endpoint,
@@ -52,10 +52,11 @@ async function run() {
                 password = result.data.authorizationToken
             } catch (err) {
                 core.setFailed(`Action failed to get authorization token with error: ${err}`);
+                return;
             }
         } else {
             console.log(`Getting tokens for temp user by access key for instance ${instanceId} ...`);
-            var client = new RPCClient({
+            let client = new RPCClient({
                 accessKeyId,
                 accessKeySecret,
                 endpoint: endpoint,
@@ -71,6 +72,7 @@ async function run() {
                 password = result.AuthorizationToken
             } catch (err) {
                 core.setFailed(`Action failed to get authorization token with error: ${err}`);
+                return;
             }
         }
     }
@@ -99,4 +101,4 @@ async function run() {
     console.log('DOCKER_CONFIG environment variable is set');
 }
 
-run().catch(core.setFailed);
+run().catch(e => core.setFailed(e));
