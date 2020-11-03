@@ -2,7 +2,7 @@
 Use this GitHub Action to [log in to a private container registry](https://docs.docker.com/engine/reference/commandline/login/) such as [Alibaba Cloud Container Registry](https://www.aliyun.com/product/acr). Once login is done, the next set of actions in the workflow can perform tasks such as building, tagging and pushing containers.
 
 ```yaml
-- uses: denverdino/acr-login@v0.1.1
+- uses: denverdino/acr-login@v1
   with:
     login-server: '<login server>' # default: https://index.docker.io/v1/
     username: '<username>'
@@ -12,7 +12,7 @@ Use this GitHub Action to [log in to a private container registry](https://docs.
 Or
 
 ```yaml
-- uses: denverdino/acr-login@v0.1.1
+- uses: denverdino/acr-login@v1
   with:
     region-id: '<region id>' # example: cn-hangzhou
     access-key-id: '<access key id>'
@@ -22,7 +22,7 @@ Or
 Or
 
 ```yaml
-- uses: denverdino/acr-login@v0.1.1
+- uses: denverdino/acr-login@v1
   with:
     login-server: '<login server>' # example: https://my-test-registry.cn-hangzhou.cr.aliyuncs.com
     region-id: '<region id>' # example: cn-hangzhou
@@ -36,7 +36,7 @@ Refer to the action metadata file for details about all the inputs: [action.yml]
 ## You can build and push container registry by using the following example
 ```yaml
 - name: Login to ACR
-  uses: denverdino/acr-login@v0.1.1
+  uses: denverdino/acr-login@v1
   with:
     login-server: https://registry.cn-hangzhou.aliyuncs.com
     username: "${{ secrets.REGISTRY_USERNAME }}"

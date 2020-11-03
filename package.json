@@ -2,23 +2,36 @@
     "name": "acr-login-action",
     "version": "0.1.1",
     "private": true,
-    "main": "lib/login.js",
+    "main": "src/login.js",
     "scripts": {
-        "lint": "eslint ."
+        "lint": "eslint .",
+        "prepare": "ncc build src/login.js -o dist --source-map --license licenses.txt",
+        "all": "npm run lint && npm run prepare"
     },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/denverdino/acr-login.git"
+    },    
     "keywords": [
         "actions",
-        "node",
-        "setup"
+        "alibaba",
+        "container",
+        "github",
+        "acr"
     ],
-    "author": "GitHub",
+    "author": "denverdino@gmail.com",
     "license": "Apache",
+    "bugs": {
+        "url": "https://github.com/denverdino/acr-login/issues"
+    },
+    "homepage": "https://github.com/denverdino/acr-login#readme",
     "dependencies": {
         "@actions/core": "^1.2.6",
         "@actions/io": "^1.0.2",
         "@alicloud/pop-core": "^1.7.10"
     },
     "devDependencies": {
+        "@vercel/ncc": "^0.24.0",
         "eslint": "^7.4.0"
     }
 }

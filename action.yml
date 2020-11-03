@@ -34,4 +34,4 @@ branding:
   icon: 'anchor'
 runs:
   using: 'node12'
-  main: 'src/login.js'
+  main: 'dist/index.js'
