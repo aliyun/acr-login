@@ -1,6 +1,6 @@
 {
     "name": "acr-login-action",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "private": true,
     "main": "src/login.js",
     "scripts": {
