@@ -13914,7 +13914,6 @@ function plural(ms, msAbs, n, name) {
 
 const core = __webpack_require__(6024);
 const io = __webpack_require__(6202);
-const { issueCommand } = __webpack_require__(5350);
 
 const path = __webpack_require__(5622);
 const fs = __webpack_require__(5747);
@@ -14011,7 +14010,7 @@ async function run() {
     const dockerConfigPath = path.join(dirPath, `config.json`);
     core.debug(`Writing docker config contents to ${dockerConfigPath}`);
     fs.writeFileSync(dockerConfigPath, JSON.stringify(config));
-    issueCommand('set-env', { name: 'DOCKER_CONFIG' }, dirPath);
+    core.exportVariable('DOCKER_CONFIG', dirPath);
     console.log('DOCKER_CONFIG environment variable is set');
 }
 

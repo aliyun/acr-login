@@ -1,6 +1,5 @@
 const core = require('@actions/core');
 const io = require('@actions/io');
-const { issueCommand } = require('@actions/core/lib/command');
 
 const path = require('path');
 const fs = require('fs');
@@ -97,7 +96,7 @@ async function run() {
     const dockerConfigPath = path.join(dirPath, `config.json`);
     core.debug(`Writing docker config contents to ${dockerConfigPath}`);
     fs.writeFileSync(dockerConfigPath, JSON.stringify(config));
-    issueCommand('set-env', { name: 'DOCKER_CONFIG' }, dirPath);
+    core.exportVariable('DOCKER_CONFIG', dirPath);
     console.log('DOCKER_CONFIG environment variable is set');
 }
 
