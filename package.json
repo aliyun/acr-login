@@ -10,7 +10,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/denverdino/acr-login.git"
+        "url": "git+https://github.com/aliyun/acr-login.git"
     },    
     "keywords": [
         "actions",
@@ -22,9 +22,9 @@
     "author": "denverdino@gmail.com",
     "license": "Apache",
     "bugs": {
-        "url": "https://github.com/denverdino/acr-login/issues"
+        "url": "https://github.com/aliyun/acr-login/issues"
     },
-    "homepage": "https://github.com/denverdino/acr-login#readme",
+    "homepage": "https://github.com/aliyun/acr-login#readme",
     "dependencies": {
         "@actions/core": "^1.2.6",
         "@actions/io": "^1.0.2",
