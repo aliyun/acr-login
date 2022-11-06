@@ -1,6 +1,6 @@
 {
     "name": "acr-login-action",
-    "version": "1.0.0",
+    "version": "1.0.4",
     "private": true,
     "main": "src/login.js",
     "scripts": {
@@ -31,7 +31,7 @@
         "@alicloud/pop-core": "^1.7.10"
     },
     "devDependencies": {
-        "@vercel/ncc": "^0.24.0",
-        "eslint": "^7.4.0"
+        "@vercel/ncc": "^0.34.0",
+        "eslint": "^8.26.0"
     }
 }
