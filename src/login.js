@@ -18,6 +18,7 @@ function getRegistryEndpoint(regionId) {
 async function run() {
     let accessKeyId = core.getInput('access-key-id', { required: false });
     let accessKeySecret = core.getInput('access-key-secret', { required: false });
+    let securityToken = core.getInput('security-token', { required: false });
     let username = core.getInput('username', { required: false });
     let password = core.getInput('password', { required: false });
     let regionId = core.getInput('region-id', { required: false });
@@ -41,6 +42,7 @@ async function run() {
             let client = new ROAClient({
                 accessKeyId,
                 accessKeySecret,
+                securityToken,
                 endpoint: endpoint,
                 apiVersion: '2016-06-07'
             });
@@ -58,6 +60,7 @@ async function run() {
             let client = new RPCClient({
                 accessKeyId,
                 accessKeySecret,
+                securityToken,
                 endpoint: endpoint,
                 codes: ['success'], 
                 apiVersion: '2018-12-01'

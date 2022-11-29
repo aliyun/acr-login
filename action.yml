@@ -17,6 +17,10 @@ inputs:
     description: 'Access key secret'
     required: false
     default: ''
+  security-token:
+    description: 'STS token'
+    required: false
+    default: ''
   region-id:
     description: 'Region id'
     required: false
