@@ -28,7 +28,7 @@
     "dependencies": {
         "@actions/core": "^1.9.1",
         "@actions/io": "^1.0.2",
-        "@alicloud/pop-core": "^1.7.10"
+        "@alicloud/pop-core": "^1.7.13"
     },
     "devDependencies": {
         "@vercel/ncc": "^0.34.0",
