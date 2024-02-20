@@ -3,19 +3,19 @@ description: 'Log in to a container registry'
 inputs: 
   username:
     description: 'Container registry username'
-    required: false
+    required: true
     default: ''
   password:
     description: 'Container registry password'
-    required: false
+    required: true
     default: ''
   access-key-id:
     description: 'Access key id'
-    required: false
+    required: true
     default: ''
   access-key-secret:
     description: 'Access key secret'
-    required: false
+    required: true
     default: ''
   security-token:
     description: 'STS token'
@@ -23,11 +23,11 @@ inputs:
     default: ''
   region-id:
     description: 'Region id'
-    required: false
+    required: true
     default: 'cn-hangzhou'
   instance-id:
     description: 'Registry instance id'
-    required: false
+    required:true
     default: ''
   login-server:
     description: 'Container registry server url'
