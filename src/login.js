@@ -1,10 +1,8 @@
 const core = require('@actions/core');
-const io = require('@actions/io');
 
-const path = require('path');
-const fs = require('fs');
 const ROAClient = require('@alicloud/pop-core').ROAClient;
 const RPCClient = require('@alicloud/pop-core').RPCClient;
+const {Docker} = require('@docker/actions-toolkit/lib/docker/docker');
 
 
 function getAPIEndpoint(regionId) {
@@ -27,14 +25,14 @@ async function run() {
     let endpoint = getAPIEndpoint(regionId);
 
     if (accessKeyId.length > 0) {
-        if (regionId.length == 0) {
+        if (regionId.length === 0) {
             core.setFailed(`Action failed for region-id is missing`);
             return;
         }
 
-        if (instanceId.length == 0) {
+        if (instanceId.length === 0) {
 
-            if (loginServer.length == 0) {
+            if (loginServer.length === 0) {
                 loginServer = getRegistryEndpoint(regionId)
             }
 
@@ -79,28 +77,30 @@ async function run() {
         }
     }
 
-    if (loginServer.length == 0) {
+    if (loginServer.length === 0) {
         loginServer = 'https://index.docker.io/v1/';
     }
 
-    let authenticationToken = Buffer.from(`${username}:${password}`).toString('base64');
-
-    let config = {
-        "auths": {
-            [loginServer]: {
-                auth: authenticationToken
-            }
+    await Docker.getExecOutput(['login', '--password-stdin', '--username', `${username}`, `${loginServer}`], {
+        ignoreReturnCode: true,
+        silent: true,
+        input: Buffer.from(`${password}`)
+    }).then(res => {
+        if (res.stderr.length > 0 && res.exitCode != 0) {
+            throw new Error(res.stderr.trim());
         }
-    }
-
-    const runnerTempDirectory = process.env['RUNNER_TEMP']; // Using process.env until the core libs are updated
-    const dirPath = path.join(runnerTempDirectory, `docker_login_${Date.now()}`);
-    await io.mkdirP(dirPath);
-    const dockerConfigPath = path.join(dirPath, `config.json`);
-    core.debug(`Writing docker config contents to ${dockerConfigPath}`);
-    fs.writeFileSync(dockerConfigPath, JSON.stringify(config));
-    core.exportVariable('DOCKER_CONFIG', dirPath);
-    console.log('DOCKER_CONFIG environment variable is set');
+        core.info('Login Succeeded!');
+    });
 }
 
-run().catch(e => core.setFailed(e));
+// Only run immediately if not in a test environment
+if (process.env.NODE_ENV !== 'test') {
+    run().catch(e => core.setFailed(e));
+}
+
+// Export functions for testing
+module.exports = {
+    getAPIEndpoint,
+    getRegistryEndpoint,
+    run
+};
