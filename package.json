@@ -6,12 +6,13 @@
     "scripts": {
         "lint": "eslint .",
         "prepare": "ncc build src/login.js -o dist --source-map --license licenses.txt",
+        "test": "jest",
         "all": "npm run lint && npm run prepare"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/aliyun/acr-login.git"
-    },    
+    },
     "keywords": [
         "actions",
         "alibaba",
@@ -27,11 +28,12 @@
     "homepage": "https://github.com/aliyun/acr-login#readme",
     "dependencies": {
         "@actions/core": "^1.9.1",
-        "@actions/io": "^1.0.2",
-        "@alicloud/pop-core": "^1.7.13"
+        "@alicloud/pop-core": "^1.7.13",
+        "@docker/actions-toolkit": "^0.62.1"
     },
     "devDependencies": {
         "@vercel/ncc": "^0.34.0",
-        "eslint": "^8.26.0"
+        "eslint": "^8.26.0",
+        "jest": "^29.7.0"
     }
 }

@@ -98,3 +98,6 @@ Thumbs.db
 __tests__/runner/*
 lib/**/*
 node_modules/
+
+# idea
+.idea/
