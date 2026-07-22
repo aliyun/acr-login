@@ -26,10 +26,16 @@
         "url": "https://github.com/aliyun/acr-login/issues"
     },
     "homepage": "https://github.com/aliyun/acr-login#readme",
+    "engines": {
+        "node": ">=20"
+    },
     "dependencies": {
-        "@actions/core": "^1.9.1",
-        "@alicloud/pop-core": "^1.7.13",
-        "@docker/actions-toolkit": "^0.62.1"
+        "@actions/core": "^2.0.3",
+        "@alicloud/cr20181201": "^2.2.0",
+        "@alicloud/openapi-client": "^0.4.15",
+        "@alicloud/tea-util": "^1.4.0",
+        "@docker/actions-toolkit": "^0.91.0",
+        "debug": "^4.4.3"
     },
     "devDependencies": {
         "@vercel/ncc": "^0.34.0",
