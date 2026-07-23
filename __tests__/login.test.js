@@ -1,10 +1,12 @@
 const core = require('@actions/core');
-const { ROAClient, RPCClient } = require('@alicloud/pop-core');
+const OpenApi = require('@alicloud/openapi-client');
+const CR20181201 = require('@alicloud/cr20181201');
 const { Docker } = require('@docker/actions-toolkit/lib/docker/docker');
 
 // Mock the modules
 jest.mock('@actions/core');
-jest.mock('@alicloud/pop-core');
+jest.mock('@alicloud/openapi-client');
+jest.mock('@alicloud/cr20181201');
 jest.mock('@docker/actions-toolkit/lib/docker/docker');
 
 // Import functions to test
@@ -28,494 +30,309 @@ describe('getRegistryEndpoint', () => {
 
 describe('run', () => {
     beforeEach(() => {
-        // Clear all mocks before each test
         jest.clearAllMocks();
-        
-        // Mock console.log
         jest.spyOn(console, 'log').mockImplementation(() => {});
     });
-    
+
     afterEach(() => {
-        // Restore console.log
         jest.restoreAllMocks();
     });
-    
-    test('should fail when accessKeyId is provided but regionId is missing', async () => {
-        // Arrange
+
+    test('should fail when accessKeyId is provided but accessKeySecret is missing', async () => {
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'region-id': 
-                    return '';
-                default: 
-                    return '';
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return '';
+                case 'region-id': return 'cn-hangzhou';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
-        expect(core.setFailed).toHaveBeenCalledWith('Action failed for region-id is missing');
+
+        expect(core.setFailed).toHaveBeenCalledWith('Action failed: access-key-secret is required when access-key-id is provided');
     });
-    
-    test('should use ROA client when accessKeyId and regionId are provided but instanceId is missing', async () => {
-        // Arrange
-        const mockResult = {
-            data: {
-                tempUserName: 'temp-user',
-                authorizationToken: 'temp-token'
-            }
-        };
-        
-        const mockROAClient = {
-            request: jest.fn().mockResolvedValue(mockResult)
-        };
-        
-        ROAClient.mockImplementation(() => mockROAClient);
-        
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
-        });
-        
+
+    test('should fail when accessKeyId is provided but regionId is missing', async () => {
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return '';
-                case 'login-server': 
-                    return '';
-                default: 
-                    return '';
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return '';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
-        expect(ROAClient).toHaveBeenCalledWith({
+
+        expect(core.setFailed).toHaveBeenCalledWith('Action failed: region-id is required when access-key-id is provided');
+    });
+
+    test('should use ROA client when accessKeyId and regionId are provided but instanceId is missing', async () => {
+        const mockCallApi = jest.fn().mockResolvedValue({
+            body: { data: { tempUserName: 'temp-user', authorizationToken: 'temp-token' } }
+        });
+
+        OpenApi.default.mockImplementation(() => ({ callApi: mockCallApi }));
+
+        Docker.getExecOutput.mockResolvedValue({ stderr: '', exitCode: 0 });
+
+        core.getInput.mockImplementation((name) => {
+            switch (name) {
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return 'cn-hangzhou';
+                case 'instance-id': return '';
+                case 'login-server': return '';
+                default: return '';
+            }
+        });
+
+        await run();
+
+        expect(OpenApi.default).toHaveBeenCalledWith(expect.objectContaining({
             accessKeyId: 'test-access-key-id',
             accessKeySecret: 'test-access-key-secret',
-            securityToken: '',
-            endpoint: 'https://cr.cn-hangzhou.aliyuncs.com',
-            apiVersion: '2016-06-07'
-        });
-        
-        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
-        
+            endpoint: 'cr.cn-hangzhou.aliyuncs.com',
+            protocol: 'HTTPS'
+        }));
+
+        expect(mockCallApi).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action: 'GetAuthorizationToken',
+                version: '2016-06-07',
+                pathname: '/tokens',
+                method: 'GET',
+                style: 'ROA',
+                bodyType: 'json'
+            }),
+            expect.any(Object),
+            expect.any(Object)
+        );
+
         expect(Docker.getExecOutput).toHaveBeenCalledWith(
             ['login', '--password-stdin', '--username', 'temp-user', 'https://registry.cn-hangzhou.aliyuncs.com'],
-            {
-                ignoreReturnCode: true,
-                silent: true,
-                input: Buffer.from('temp-token')
-            }
+            { ignoreReturnCode: true, silent: true, input: Buffer.from('temp-token') }
         );
-        
+
         expect(core.info).toHaveBeenCalledWith('Login Succeeded!');
     });
-    
+
     test('should use RPC client when accessKeyId, regionId, and instanceId are provided', async () => {
-        // Arrange
-        const mockResult = {
-            TempUsername: 'temp-user',
-            AuthorizationToken: 'temp-token'
-        };
-        
-        const mockRPCClient = {
-            request: jest.fn().mockResolvedValue(mockResult)
-        };
-        
-        RPCClient.mockImplementation(() => mockRPCClient);
-        
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
+        const mockGetAuthorizationToken = jest.fn().mockResolvedValue({
+            body: { tempUsername: 'temp-user', authorizationToken: 'temp-token' }
         });
-        
+
+        CR20181201.default.mockImplementation(() => ({
+            getAuthorizationToken: mockGetAuthorizationToken
+        }));
+
+        Docker.getExecOutput.mockResolvedValue({ stderr: '', exitCode: 0 });
+
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return 'cri-12345';
-                case 'login-server': 
-                    return '';  // Empty login server
-                default: 
-                    return '';
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return 'cn-hangzhou';
+                case 'instance-id': return 'cri-12345';
+                case 'login-server': return '';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
-        expect(RPCClient).toHaveBeenCalledWith({
+
+        expect(CR20181201.default).toHaveBeenCalledWith(expect.objectContaining({
             accessKeyId: 'test-access-key-id',
             accessKeySecret: 'test-access-key-secret',
-            securityToken: '',
-            endpoint: 'https://cr.cn-hangzhou.aliyuncs.com',
-            codes: ['success'],
-            apiVersion: '2018-12-01'
-        });
-        
-        expect(mockRPCClient.request).toHaveBeenCalledWith("GetAuthorizationToken", {
-            InstanceId: 'cri-12345',
-            RegionId: 'cn-hangzhou'
-        });
-        
-        // For RPC mode, loginServer should default to Docker Hub when empty
+            endpoint: 'cr.cn-hangzhou.aliyuncs.com',
+            protocol: 'HTTPS'
+        }));
+
+        expect(mockGetAuthorizationToken).toHaveBeenCalledWith(
+            expect.objectContaining({ instanceId: 'cri-12345' })
+        );
+
         expect(Docker.getExecOutput).toHaveBeenCalledWith(
             ['login', '--password-stdin', '--username', 'temp-user', 'https://index.docker.io/v1/'],
-            {
-                ignoreReturnCode: true,
-                silent: true,
-                input: Buffer.from('temp-token')
-            }
+            { ignoreReturnCode: true, silent: true, input: Buffer.from('temp-token') }
         );
-        
+
         expect(core.info).toHaveBeenCalledWith('Login Succeeded!');
     });
-    
+
     test('should use provided username and password when accessKeyId is not provided', async () => {
-        // Arrange
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
-        });
-        
+        Docker.getExecOutput.mockResolvedValue({ stderr: '', exitCode: 0 });
+
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'username': 
-                    return 'test-user';
-                case 'password': 
-                    return 'test-password';
-                case 'login-server': 
-                    return 'https://custom.registry.com';
-                default: 
-                    return '';
+                case 'username': return 'test-user';
+                case 'password': return 'test-password';
+                case 'login-server': return 'https://custom.registry.com';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
+
         expect(Docker.getExecOutput).toHaveBeenCalledWith(
             ['login', '--password-stdin', '--username', 'test-user', 'https://custom.registry.com'],
-            {
-                ignoreReturnCode: true,
-                silent: true,
-                input: Buffer.from('test-password')
-            }
+            { ignoreReturnCode: true, silent: true, input: Buffer.from('test-password') }
         );
         expect(core.info).toHaveBeenCalledWith('Login Succeeded!');
     });
-    
+
     test('should use default Docker Hub when no login-server is provided', async () => {
-        // Arrange
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
-        });
-        
+        Docker.getExecOutput.mockResolvedValue({ stderr: '', exitCode: 0 });
+
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'username': 
-                    return 'test-user';
-                case 'password': 
-                    return 'test-password';
-                case 'login-server': 
-                    return '';
-                default: 
-                    return '';
+                case 'username': return 'test-user';
+                case 'password': return 'test-password';
+                case 'login-server': return '';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
+
         expect(Docker.getExecOutput).toHaveBeenCalledWith(
             ['login', '--password-stdin', '--username', 'test-user', 'https://index.docker.io/v1/'],
-            {
-                ignoreReturnCode: true,
-                silent: true,
-                input: Buffer.from('test-password')
-            }
+            { ignoreReturnCode: true, silent: true, input: Buffer.from('test-password') }
         );
         expect(core.info).toHaveBeenCalledWith('Login Succeeded!');
     });
-    
+
     test('should fail when ROA client request fails', async () => {
-        // Arrange
         const errorMessage = 'ROA client error';
-        
-        const mockROAClient = {
-            request: jest.fn().mockRejectedValue(new Error(errorMessage))
-        };
-        
-        ROAClient.mockImplementation(() => mockROAClient);
-        
+
+        OpenApi.default.mockImplementation(() => ({
+            callApi: jest.fn().mockRejectedValue(new Error(errorMessage))
+        }));
+
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return '';
-                case 'login-server':
-                    return '';
-                default: 
-                    return '';
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return 'cn-hangzhou';
+                case 'instance-id': return '';
+                case 'login-server': return '';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
-        expect(core.setFailed).toHaveBeenCalledWith(`Action failed to get authorization token with error: Error: ${errorMessage}`);
+
+        expect(core.setFailed).toHaveBeenCalledWith(`Action failed to get authorization token: ${errorMessage}`);
     });
-    
+
     test('should fail when RPC client request fails', async () => {
-        // Arrange
         const errorMessage = 'RPC client error';
-        
-        const mockRPCClient = {
-            request: jest.fn().mockRejectedValue(new Error(errorMessage))
-        };
-        
-        RPCClient.mockImplementation(() => mockRPCClient);
-        
+
+        CR20181201.default.mockImplementation(() => ({
+            getAuthorizationToken: jest.fn().mockRejectedValue(new Error(errorMessage))
+        }));
+
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return 'cri-12345';
-                case 'login-server':
-                    return '';
-                default: 
-                    return '';
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return 'cn-hangzhou';
+                case 'instance-id': return 'cri-12345';
+                case 'login-server': return '';
+                default: return '';
             }
         });
-        
-        // Act
+
         await run();
-        
-        // Assert
-        expect(core.setFailed).toHaveBeenCalledWith(`Action failed to get authorization token with error: Error: ${errorMessage}`);
+
+        expect(core.setFailed).toHaveBeenCalledWith(`Action failed to get authorization token: ${errorMessage}`);
     });
-    
+
     test('should fail when Docker login fails', async () => {
-        // Arrange
         const errorMessage = 'Docker login error';
-        
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: errorMessage,
-            exitCode: 1
-        });
-        
-        core.getInput.mockImplementation((name) => {
-            switch (name) {
-                case 'username': 
-                    return 'test-user';
-                case 'password': 
-                    return 'test-password';
-                case 'login-server':
-                    return 'https://custom.registry.com';
-                default: 
-                    return '';
-            }
-        });
-        
-        // Act & Assert
-        await expect(run()).rejects.toThrow(errorMessage);
-    });
 
-    // Tests for endpoint handling logic
-    test('should use custom endpoint when provided', async () => {
-        // Arrange
-        const mockResult = {
-            data: {
-                tempUserName: 'temp-user',
-                authorizationToken: 'temp-token'
-            }
-        };
-
-        const mockROAClient = {
-            request: jest.fn().mockResolvedValue(mockResult)
-        };
-
-        ROAClient.mockImplementation(() => mockROAClient);
-
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
-        });
+        Docker.getExecOutput.mockResolvedValue({ stderr: errorMessage, exitCode: 1 });
 
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return '';
-                case 'endpoint':
-                    return 'https://custom.endpoint.com';
-                case 'login-server': 
-                    return '';
-                default: 
-                    return '';
+                case 'username': return 'test-user';
+                case 'password': return 'test-password';
+                case 'login-server': return 'https://custom.registry.com';
+                default: return '';
             }
         });
 
-        // Act
         await run();
 
-        // Assert
-        expect(ROAClient).toHaveBeenCalledWith({
-            accessKeyId: 'test-access-key-id',
-            accessKeySecret: 'test-access-key-secret',
-            securityToken: '',
-            endpoint: 'https://custom.endpoint.com', // Should use custom endpoint
-            apiVersion: '2016-06-07'
+        expect(core.setFailed).toHaveBeenCalledWith(`Docker login failed: ${errorMessage}`);
+    });
+
+    test('should use custom endpoint when provided', async () => {
+        const mockCallApi = jest.fn().mockResolvedValue({
+            body: { data: { tempUserName: 'temp-user', authorizationToken: 'temp-token' } }
         });
 
-        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
+        OpenApi.default.mockImplementation(() => ({ callApi: mockCallApi }));
+
+        Docker.getExecOutput.mockResolvedValue({ stderr: '', exitCode: 0 });
+
+        core.getInput.mockImplementation((name) => {
+            switch (name) {
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return 'cn-hangzhou';
+                case 'instance-id': return '';
+                case 'endpoint': return 'https://custom.endpoint.com';
+                case 'login-server': return '';
+                default: return '';
+            }
+        });
+
+        await run();
+
+        expect(OpenApi.default).toHaveBeenCalledWith(expect.objectContaining({
+            endpoint: 'custom.endpoint.com',
+            protocol: 'HTTPS'
+        }));
     });
 
     test('should use default endpoint when endpoint is not provided', async () => {
-        // Arrange
-        const mockResult = {
-            data: {
-                tempUserName: 'temp-user',
-                authorizationToken: 'temp-token'
-            }
-        };
-
-        const mockROAClient = {
-            request: jest.fn().mockResolvedValue(mockResult)
-        };
-
-        ROAClient.mockImplementation(() => mockROAClient);
-
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
+        const mockCallApi = jest.fn().mockResolvedValue({
+            body: { data: { tempUserName: 'temp-user', authorizationToken: 'temp-token' } }
         });
+
+        OpenApi.default.mockImplementation(() => ({ callApi: mockCallApi }));
+
+        Docker.getExecOutput.mockResolvedValue({ stderr: '', exitCode: 0 });
 
         core.getInput.mockImplementation((name) => {
             switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return '';
-                case 'endpoint':
-                    return ''; // Empty endpoint
-                case 'login-server': 
-                    return '';
-                default: 
-                    return '';
+                case 'access-key-id': return 'test-access-key-id';
+                case 'access-key-secret': return 'test-access-key-secret';
+                case 'region-id': return 'cn-hangzhou';
+                case 'instance-id': return '';
+                case 'endpoint': return '';
+                case 'login-server': return '';
+                default: return '';
             }
         });
 
-        // Spy on getAPIEndpoint
-        const { getAPIEndpoint } = require('../src/login.js');
-        jest.spyOn({ getAPIEndpoint }, 'getAPIEndpoint');
-        // Act
         await run();
 
-        // Assert
-        expect(ROAClient).toHaveBeenCalledWith({
-            accessKeyId: 'test-access-key-id',
-            accessKeySecret: 'test-access-key-secret',
-            securityToken: '',
-            endpoint: 'https://cr.cn-hangzhou.aliyuncs.com', // Should use default endpoint
-            apiVersion: '2016-06-07'
-        });
-
-        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
+        expect(OpenApi.default).toHaveBeenCalledWith(expect.objectContaining({
+            endpoint: 'cr.cn-hangzhou.aliyuncs.com',
+            protocol: 'HTTPS'
+        }));
     });
 
-    test('should use default endpoint when endpoint is empty string', async () => {
-        // Arrange
-        const mockResult = {
-            data: {
-                tempUserName: 'temp-user',
-                authorizationToken: 'temp-token'
-            }
-        };
+    test('should fail when username and password are not provided', async () => {
+        core.getInput.mockImplementation(() => '');
 
-        const mockROAClient = {
-            request: jest.fn().mockResolvedValue(mockResult)
-        };
-
-        ROAClient.mockImplementation(() => mockROAClient);
-
-        Docker.getExecOutput.mockResolvedValue({
-            stderr: '',
-            exitCode: 0
-        });
-
-        core.getInput.mockImplementation((name) => {
-            switch (name) {
-                case 'access-key-id': 
-                    return 'test-access-key-id';
-                case 'access-key-secret': 
-                    return 'test-access-key-secret';
-                case 'region-id': 
-                    return 'cn-hangzhou';
-                case 'instance-id': 
-                    return '';
-                case 'endpoint':
-                    return ''; // Empty string endpoint
-                case 'login-server': 
-                    return '';
-                default: 
-                    return '';
-            }
-        });
-
-        // Act
         await run();
 
-        // Assert
-        expect(ROAClient).toHaveBeenCalledWith({
-            accessKeyId: 'test-access-key-id',
-            accessKeySecret: 'test-access-key-secret',
-            securityToken: '',
-            endpoint: 'https://cr.cn-hangzhou.aliyuncs.com', // Should use default endpoint
-            apiVersion: '2016-06-07'
-        });
-
-        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
+        expect(core.setFailed).toHaveBeenCalledWith(
+            'Action failed: username and password are required. Provide them directly or via access-key-id/access-key-secret.'
+        );
     });
 });
